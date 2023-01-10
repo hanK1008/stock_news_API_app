@@ -7,13 +7,13 @@ COMPANY_NAME = "Tesla Inc"
 stock_apikey = os.environ["STOCK_API_KEY"]
 
 # Date Time
-yesterday = datetime.date.today() - datetime.timedelta(days=1)
-yesterday.strftime("%y-%m-%d")
-print(yesterday)
-
-day_before_yesterday = datetime.date.today() - datetime.timedelta(days=2)
-day_before_yesterday.strftime("%y-%m-%d")
-print(day_before_yesterday)
+# yesterday = datetime.date.today() - datetime.timedelta(days=1)
+# yesterday.strftime("%y-%m-%d")
+# print(yesterday)
+#
+# day_before_yesterday = datetime.date.today() - datetime.timedelta(days=2)
+# day_before_yesterday.strftime("%y-%m-%d")
+# print(day_before_yesterday)
 
 
 ## STEP 1: Use https://www.alphavantage.co
@@ -31,10 +31,12 @@ stock_data = response.json()
 
 keys= []
 daily_stock_Data = stock_data["Time Series (Daily)"]
-for n in range(2):
-    for key, value in daily_stock_Data.items():
-        pair = (key, value)
-        keys.append(pair)
+n = 0
+for key, value in daily_stock_Data.items():
+    pair = (key, value)
+    keys.append(pair)
+    n += 1
+    if n > 1:
         break
 
 print(keys)
@@ -42,8 +44,22 @@ print(keys)
 
 ## STEP 2: Use https://newsapi.org
 # Instead of printing ("Get News"), actually get the first 3 news pieces for the COMPANY_NAME.
-news_api_key = "newsAPIkey"
-news_end_point = "https://newsapi.org/v2/everything"
+news_api_key = os.environ["NEWS_API_KEY"]
+news_end_point = "https://newsapi.org/v2/top-headlines"
+# Working API string: https://newsapi.org/v2/top-headlines?q=tesla&apiKey
+
+news_param = {
+    "q": "tesla",
+    "apiKey": news_api_key
+}
+
+news_response = requests.get(url=news_end_point, params=news_param)
+news_response.raise_for_status()
+
+news_data = news_response.json()
+
+# Printing the top headlines for tesla from new API
+print(news_data)
 
 ## STEP 3: Use https://www.twilio.com
 # Send a seperate message with the percentage change and each article's title and description to your phone number. 
