@@ -41,6 +41,14 @@ for key, value in daily_stock_Data.items():
 
 print(keys)
 
+# To get the percentage increase and decrease formula is ((value/total value)-1)*100
+# -ve value = get decreases from previous day
+# +ve value = Value get increases as compare to day before yesterday
+
+yesterday_open_value = keys[0][1]["1. open"]
+before_yesterday_close_value = keys[1][1]["4. close"]
+
+percentage = (((float(yesterday_open_value))/(float(before_yesterday_close_value)))-1)*100
 
 ## STEP 2: Use https://newsapi.org
 # Instead of printing ("Get News"), actually get the first 3 news pieces for the COMPANY_NAME.
@@ -59,7 +67,10 @@ news_response.raise_for_status()
 news_data = news_response.json()
 
 # Printing the top headlines for tesla from new API
-print(news_data)
+# print(news_data)
+headline = news_data["articles"][0]["title"]
+brief = news_data["articles"][0]["description"]
+
 
 ## STEP 3: Use https://www.twilio.com
 # Send a seperate message with the percentage change and each article's title and description to your phone number. 
