@@ -1,22 +1,14 @@
+import html
+from twilio.rest import Client
 import requests
 import os
-import datetime
+
 
 STOCK = "TSLA"
 COMPANY_NAME = "Tesla Inc"
 stock_apikey = os.environ["STOCK_API_KEY"]
 
-# Date Time
-# yesterday = datetime.date.today() - datetime.timedelta(days=1)
-# yesterday.strftime("%y-%m-%d")
-# print(yesterday)
-#
-# day_before_yesterday = datetime.date.today() - datetime.timedelta(days=2)
-# day_before_yesterday.strftime("%y-%m-%d")
-# print(day_before_yesterday)
-
-
-## STEP 1: Use https://www.alphavantage.co
+# STEP 1: Use https://www.alphavantage.co
 # When STOCK price increase/decreases by 5% between yesterday and the day before yesterday then print("Get News").
 stock_endpoint = "https://www.alphavantage.co/query"
 stock_param = {
@@ -39,7 +31,7 @@ for key, value in daily_stock_Data.items():
     if n > 1:
         break
 
-print(keys)
+# print(keys)  #Testing
 
 # To get the percentage increase and decrease formula is ((value/total value)-1)*100
 # -ve value = get decreases from previous day
@@ -48,7 +40,9 @@ print(keys)
 yesterday_open_value = keys[0][1]["1. open"]
 before_yesterday_close_value = keys[1][1]["4. close"]
 
-percentage = (((float(yesterday_open_value))/(float(before_yesterday_close_value)))-1)*100
+percentage = round((((float(yesterday_open_value))/(float(before_yesterday_close_value)))-1)*100)
+# print(percentage)
+
 
 ## STEP 2: Use https://newsapi.org
 # Instead of printing ("Get News"), actually get the first 3 news pieces for the COMPANY_NAME.
@@ -69,14 +63,17 @@ news_data = news_response.json()
 # Printing the top headlines for tesla from new API
 # print(news_data)
 headline = news_data["articles"][0]["title"]
-brief = news_data["articles"][0]["description"]
+brief = html.unescape(news_data["articles"][0]["description"])
+# print(headline)
+# print(brief)
 
 
-## STEP 3: Use https://www.twilio.com
-# Send a seperate message with the percentage change and each article's title and description to your phone number. 
+#Optional: Format the SMS message like this:
+if percentage >= 0:
+    changes = f'TSLA: 🔺{percentage}%'
+elif percentage < 0:
+    changes = f'TSLA: 🔻{abs(percentage)}%'
 
-
-#Optional: Format the SMS message like this: 
 """
 TSLA: 🔺2%
 Headline: Were Hedge Funds Right About Piling Into Tesla Inc. (TSLA)?. 
@@ -87,3 +84,17 @@ Headline: Were Hedge Funds Right About Piling Into Tesla Inc. (TSLA)?.
 Brief: We at Insider Monkey have gone over 821 13F filings that hedge funds and prominent investors are required to file by the SEC The 13F filings show the funds' and investors' portfolio positions as of March 31st, near the height of the coronavirus market crash.
 """
 
+## STEP 3: Use https://www.twilio.com
+# Send a seperate message with the percentage change and each article's title and description to your phone number.
+
+account_sid = os.environ['TWILIO_ACCOUNT_SID']
+auth_token = os.environ['TWILIO_AUTH_TOKEN']
+client = Client(account_sid, auth_token)
+
+message = client.messages.create(
+                     body=f"{changes}\nHeadline: {headline}\nBrief: {brief}",
+                     from_=os.environ["MY_TWILIO_NUMBER"],
+                     to=os.environ["MY_NUMBER"]
+                 )
+
+print(message.status)
